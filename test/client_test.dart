@@ -1,3 +1,4 @@
+import 'package:amazon_cognito_identity_dart/src/cognito_client_exceptions.dart';
 import 'package:test/test.dart';
 import 'package:http/testing.dart';
 import 'dart:async';
@@ -33,17 +34,14 @@ void main() {
               'Content-Type': 'application/json',
             }),
           ));
-          break;
         case '/400_unknown_error':
           return new Future.value(new http.Response('', 400));
-          break;
         case '/400___type':
           return new Future.value(new http.Response(
               '{"__type": "NotAuthorizedException", ' +
                   '"message": "Logins don\'t match. Please include at least ' +
                   'one valid login for this identity or identity pool."}',
               400));
-          break;
         case '/400_x-amzn-ErrorType':
           return new Future<http.Response>.value(new http.Response(
               '{"message":"1 validation error detected: Value null at ' +
@@ -85,11 +83,12 @@ void main() {
       try {
         data = await client.request('TestOperation', paramsReq,
             endpoint: '/400_unknown_error');
-      } catch (e) {
+      } on CognitoClientException catch (e) {
         expect(e.code, equals('UnknownError'));
         expect(e.name, equals('UnknownError'));
         expect(e.statusCode, equals(400));
-        expect(e.message, equals('Cognito client request error with unknown message'));
+        expect(e.message,
+            equals('Cognito client request error with unknown message'));
       }
       expect(data, isNull);
     });
@@ -105,7 +104,7 @@ void main() {
       try {
         data = await client.request('TestOperation', paramsReq,
             endpoint: '/400___type');
-      } catch (e) {
+      } on CognitoClientException catch (e) {
         expect(e.code, equals('NotAuthorizedException'));
         expect(e.name, equals('NotAuthorizedException'));
         expect(e.statusCode, equals(400));
@@ -128,7 +127,7 @@ void main() {
       try {
         data = await client.request('TestOperation', paramsReq,
             endpoint: '/400_x-amzn-ErrorType');
-      } catch (e) {
+      } on CognitoClientException catch (e) {
         expect(e.code, equals('ValidationException'));
         expect(e.name, equals('ValidationException'));
         expect(e.statusCode, equals(400));
